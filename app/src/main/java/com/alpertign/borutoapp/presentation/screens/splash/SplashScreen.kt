@@ -1,7 +1,6 @@
 package com.alpertign.borutoapp.presentation.screens.splash
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.window.SplashScreen
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
