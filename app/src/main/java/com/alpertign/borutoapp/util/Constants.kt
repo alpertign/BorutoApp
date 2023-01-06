@@ -4,6 +4,10 @@ package com.alpertign.borutoapp.util
  * Created by Alperen Acikgoz on 04,January,2023
  */
 object Constants {
+
+    const val BASE_URL = "http://10.0.2.2:8080"
+    // android emulatorde localhost olarak bunu yazmak gerekiyor
+
     const val DETAILS_ARGUMENT_KEY = "heroId"
     const val BORUTO_DATABASE = "boruto_database"
     const val HERO_DATABASE_TABLE = "hero_table"
