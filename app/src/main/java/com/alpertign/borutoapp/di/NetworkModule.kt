@@ -1,6 +1,10 @@
 package com.alpertign.borutoapp.di
 
+import androidx.paging.ExperimentalPagingApi
+import com.alpertign.borutoapp.data.local.BorutoDatabase
 import com.alpertign.borutoapp.data.remote.BorutoApi
+import com.alpertign.borutoapp.data.repository.RemoteDataSourceImpl
+import com.alpertign.borutoapp.domain.repository.RemoteDataSource
 import com.alpertign.borutoapp.util.Constants.BASE_URL
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
@@ -18,6 +22,7 @@ import javax.inject.Singleton
 /**
  * Created by Alperen Acikgoz on 06,January,2023
  */
+@ExperimentalPagingApi
 @ExperimentalSerializationApi
 @Module
 @InstallIn(SingletonComponent::class)
@@ -47,6 +52,18 @@ object NetworkModule {
     @Singleton
     fun provideBorutoApi(retrofit: Retrofit): BorutoApi{
         return retrofit.create(BorutoApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRemoteDataSource(
+        borutoApi: BorutoApi,
+        borutoDatabase: BorutoDatabase
+    ): RemoteDataSource{
+        return RemoteDataSourceImpl(
+            borutoApi = borutoApi,
+            borutoDatabase = borutoDatabase
+        )
     }
 
 }
