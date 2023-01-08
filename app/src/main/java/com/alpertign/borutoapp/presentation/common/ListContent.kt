@@ -1,9 +1,11 @@
 package com.alpertign.borutoapp.presentation.common
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
@@ -19,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.items
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.alpertign.borutoapp.R
@@ -32,12 +35,29 @@ import com.alpertign.borutoapp.util.Constants.BASE_URL
  * Created by Alperen Acikgoz on 08,January,2023
  */
 
+@ExperimentalCoilApi
 @Composable
 fun ListContent(
     heroes: LazyPagingItems<Hero>,
     navController: NavHostController
 ) {
+    //Log.d("ListContent",heroes.loadState.toString())
+    LazyColumn(
+        contentPadding = PaddingValues(all = SMALL_PADDING),
+        verticalArrangement = Arrangement.spacedBy(SMALL_PADDING)
+    ) {
+        items(
+            items = heroes,
+            key = {hero ->
+                hero.id
+            }
+        ) { hero ->
+            hero?.let {
+                HeroItem(hero = it, navController = navController)
+            }
 
+        }
+    }
 }
 
 @ExperimentalCoilApi
@@ -52,14 +72,19 @@ fun HeroItem(
         error(R.drawable.placeholder)
     }
 
-    Box(modifier = Modifier
-        .height(HERO_ITEM_HEIGHT)
-        .clickable {
-            navController.navigate(Screen.Details.passHeroId(heroId = hero.id))
-        },
+    Box(
+        modifier = Modifier
+            .height(HERO_ITEM_HEIGHT)
+            .clickable {
+                navController.navigate(Screen.Details.passHeroId(heroId = hero.id))
+            },
         contentAlignment = Alignment.BottomStart
+    ) {
+        Surface(
+            shape = RoundedCornerShape(
+                size = LARGE_PADDING
+            )
         ) {
-        Surface(shape = Shapes.large) {
             Image(
                 modifier = Modifier.fillMaxSize(),
                 painter = painter,
@@ -111,7 +136,7 @@ fun HeroItem(
                         text = "(${hero.rating})",
                         textAlign = TextAlign.Center,
                         color = Color.White.copy(alpha = ContentAlpha.medium)
-                        )
+                    )
                 }
             }
 
@@ -125,7 +150,7 @@ fun HeroItem(
 @ExperimentalCoilApi
 @Composable
 @Preview
-fun HeroItemPreview(){
+fun HeroItemPreview() {
     HeroItem(
         hero = Hero(
             id = 1,
@@ -139,13 +164,14 @@ fun HeroItemPreview(){
             family = listOf(),
             abilities = listOf(),
             natureTypes = listOf()
-        ), navController = rememberNavController())
+        ), navController = rememberNavController()
+    )
 }
 
 @ExperimentalCoilApi
 @Composable
 @Preview(uiMode = UI_MODE_NIGHT_YES)
-fun HeroItemDarkPreview(){
+fun HeroItemDarkPreview() {
     HeroItem(
         hero = Hero(
             id = 1,
@@ -159,7 +185,8 @@ fun HeroItemDarkPreview(){
             family = listOf(),
             abilities = listOf(),
             natureTypes = listOf()
-        ), navController = rememberNavController())
+        ), navController = rememberNavController()
+    )
 }
 
 

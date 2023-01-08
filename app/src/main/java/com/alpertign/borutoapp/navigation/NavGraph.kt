@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import coil.annotation.ExperimentalCoilApi
 import com.alpertign.borutoapp.presentation.screens.home.HomeScreen
 import com.alpertign.borutoapp.presentation.screens.splash.SplashScreen
 import com.alpertign.borutoapp.presentation.screens.welcome.WelcomeScreen
@@ -16,6 +17,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 /**
  * Created by Alperen Acikgoz on 04,January,2023
  */
+@ExperimentalCoilApi
 @ExperimentalAnimationApi
 @ExperimentalPagerApi
 @Composable
