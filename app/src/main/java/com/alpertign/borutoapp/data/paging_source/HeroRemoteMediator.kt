@@ -1,5 +1,6 @@
 package com.alpertign.borutoapp.data.paging_source
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
@@ -9,6 +10,8 @@ import com.alpertign.borutoapp.data.local.BorutoDatabase
 import com.alpertign.borutoapp.data.remote.BorutoApi
 import com.alpertign.borutoapp.domain.model.Hero
 import com.alpertign.borutoapp.domain.model.HeroRemoteKeys
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 
 /**
@@ -18,20 +21,39 @@ import javax.inject.Inject
 class HeroRemoteMediator @Inject constructor(
     private val borutoApi: BorutoApi,
     private val borutoDatabase: BorutoDatabase
-) : RemoteMediator<Int,Hero>() {
+) : RemoteMediator<Int, Hero>() {
 
     private val heroDao = borutoDatabase.heroDao()
     private val heroRemoteKeysDao = borutoDatabase.heroRemoteKeysDao()
 
+    override suspend fun initialize(): InitializeAction {
+        val currentTime = System.currentTimeMillis()
+        val lastUpdated = heroRemoteKeysDao.getRemoteKeys(heroId = 1)?.lastUpdated ?: 0L
+        val cacheTimeout = 1440 // 24 saat dk 24*60
+        Log.d("RemoteMediator", "Current Time: ${parseMillis(currentTime)}")
+        Log.d("RemoteMediator", "Last Updated Time: ${parseMillis(lastUpdated)}")
+
+        val diffInMinutes = (currentTime - lastUpdated) / 1000 / 60
+        return if (diffInMinutes.toInt() <= cacheTimeout) {
+            Log.d("RemoteMediator","UP TO DATE")
+            InitializeAction.SKIP_INITIAL_REFRESH
+        } else {
+            Log.d("RemoteMediator","REFRESH")
+
+            InitializeAction.LAUNCH_INITIAL_REFRESH
+        }
+
+    }
+
     override suspend fun load(loadType: LoadType, state: PagingState<Int, Hero>): MediatorResult {
         return try {
 
-            val page = when(loadType){
-                LoadType.REFRESH ->{
+            val page = when (loadType) {
+                LoadType.REFRESH -> {
                     val remoteKeys = getRemoteKeyClosestToCurrentPosition(state)
                     remoteKeys?.nextPage?.minus(1) ?: 1
                 }
-                LoadType.PREPEND ->{
+                LoadType.PREPEND -> {
                     val remoteKeys = getRemoteKeyForFirstItem(state)
                     val prevPage = remoteKeys?.prevPage
                         ?: return MediatorResult.Success(
@@ -39,20 +61,20 @@ class HeroRemoteMediator @Inject constructor(
                         )
                     prevPage
                 }
-                LoadType.APPEND ->{
+                LoadType.APPEND -> {
                     val remoteKeys = getRemoteKeysForLastItem(state)
                     val nextPage = remoteKeys?.nextPage
                         ?: return MediatorResult.Success(
-                            endOfPaginationReached = remoteKeys!= null
+                            endOfPaginationReached = remoteKeys != null
                         )
                     nextPage
                 }
             }
 
-            val response = borutoApi.getAllHeroes(page = page )
-            if(response.heroes.isNotEmpty()){
+            val response = borutoApi.getAllHeroes(page = page)
+            if (response.heroes.isNotEmpty()) {
                 borutoDatabase.withTransaction {
-                    if (loadType == LoadType.REFRESH){
+                    if (loadType == LoadType.REFRESH) {
                         heroDao.deleteAllHeroes()
                         heroRemoteKeysDao.deleteAllRemoteKeys()
                     }
@@ -62,7 +84,8 @@ class HeroRemoteMediator @Inject constructor(
                         HeroRemoteKeys(
                             id = hero.id,
                             prevPage = prevPage,
-                            nextPage = nextPage
+                            nextPage = nextPage,
+                            lastUpdated = response.lastUpdated
                         )
                     }
                     heroRemoteKeysDao.addAllRemoteKeys(heroRemoteKeys = keys)
@@ -70,21 +93,21 @@ class HeroRemoteMediator @Inject constructor(
                 }
             }
             MediatorResult.Success(endOfPaginationReached = response.nextPage == null)
-        }catch (e: Exception){
+        } catch (e: Exception) {
             return MediatorResult.Error(e)
         }
     }
 
     private suspend fun getRemoteKeysForLastItem(state: PagingState<Int, Hero>): HeroRemoteKeys? {
-        return state.pages.lastOrNull{it.data.isNotEmpty()}?.data?.lastOrNull()
-            ?.let { hero->
+        return state.pages.lastOrNull { it.data.isNotEmpty() }?.data?.lastOrNull()
+            ?.let { hero ->
                 heroRemoteKeysDao.getRemoteKeys(heroId = hero.id)
             }
     }
 
     private suspend fun getRemoteKeyForFirstItem(state: PagingState<Int, Hero>): HeroRemoteKeys? {
-        return state.pages.firstOrNull() { it.data.isNotEmpty()}?.data?.firstOrNull()
-            ?.let { hero->
+        return state.pages.firstOrNull() { it.data.isNotEmpty() }?.data?.firstOrNull()
+            ?.let { hero ->
                 heroRemoteKeysDao.getRemoteKeys(heroId = hero.id)
             }
     }
@@ -97,5 +120,11 @@ class HeroRemoteMediator @Inject constructor(
                 heroRemoteKeysDao.getRemoteKeys(heroId = id)
             }
         }
+    }
+
+    private fun parseMillis(millis: Long): String{
+        val date = Date(millis)
+        val format = SimpleDateFormat("yyy.MM.dd HH:mm", Locale.ROOT)
+        return format.format(date)
     }
 }
