@@ -2,11 +2,17 @@ package com.alpertign.borutoapp.presentation.screens.details
 
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil.annotation.ExperimentalCoilApi
+import com.alpertign.borutoapp.util.Constants.BASE_URL
+import com.alpertign.borutoapp.util.PaletteGenerator.convertImageUrl2Bitmap
+import com.alpertign.borutoapp.util.PaletteGenerator.extractColorsFromBitmap
+import kotlinx.coroutines.flow.collectLatest
 
 /**
  * Created by Alperen Acikgoz on 13,January,2023
@@ -17,10 +23,44 @@ import coil.annotation.ExperimentalCoilApi
 @Composable
 fun DetailsScreen(
     navController: NavHostController,
-    detailsViewModel: DetailsViewModel= hiltViewModel()
-    ){
+    detailsViewModel: DetailsViewModel = hiltViewModel()
+) {
 
     val selectedHero by detailsViewModel.selectedHero.collectAsState()
+    val colorPalette by detailsViewModel.colorPalette
 
-    DetailsContent(navController = navController, selectedHero = selectedHero)
+    if (colorPalette.isEmpty()) {
+        DetailsContent(
+            navController = navController,
+            selectedHero = selectedHero,
+            colors = colorPalette
+        )
+    } else {
+        detailsViewModel.generateColorPalette()
+    }
+
+    val context = LocalContext.current
+    LaunchedEffect(key1 = true) {
+
+    detailsViewModel.uiEvent.collectLatest {event ->
+        when (event){
+            is UiEvent.GenerateColorPalette -> {
+                val bitmap = convertImageUrl2Bitmap(
+                    imageUrl = "$BASE_URL${selectedHero?.image}",
+                    context = context
+                )
+                if (bitmap!= null){
+                    detailsViewModel.setColorPalette(
+                        colors = extractColorsFromBitmap(
+                            bitmap = bitmap
+                        )
+                    )
+                }
+
+            }
+        }
+    }
+
+    }
+
 }
