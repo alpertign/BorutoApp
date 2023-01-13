@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.alpertign.borutoapp.data.local.BorutoDatabase
+import com.alpertign.borutoapp.data.repository.LocalDataSourceImpl
+import com.alpertign.borutoapp.domain.repository.LocalDataSource
 import com.alpertign.borutoapp.util.Constants.BORUTO_DATABASE
 import dagger.Module
 import dagger.Provides
@@ -30,4 +32,15 @@ object DatabaseModule {
             BORUTO_DATABASE
         ).build()
     }
+
+    @Provides
+    @Singleton
+    fun provideLocalDataSource(
+        dataBase : BorutoDatabase
+    ): LocalDataSource{
+        return LocalDataSourceImpl(
+            borutoDatabase = dataBase
+        )
+    }
+
 }
