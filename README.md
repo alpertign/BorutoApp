@@ -1,6 +1,19 @@
 # BorutoApp
 
-Tech: Jetpack Compose, Compose Navigation, Paging3, Room, DataStore Preferences, Coroutines,Coil, Accompanist, Retrofit, Palette API, RemoteMediator, Unit Test, UI Test.
+Tech: 
+Jetpack Compose, 
+Compose Navigation, 
+Paging3, 
+Room, 
+DataStore Preferences, 
+Coroutines,
+Coil, 
+Accompanist, 
+Retrofit, 
+Palette API, 
+RemoteMediator, 
+Unit Test, 
+UI Test.
 
 Architecture : MVVM, Repository Pattern, Single Source of Truth
 
